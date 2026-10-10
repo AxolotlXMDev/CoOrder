@@ -1,0 +1,7 @@
+vaadin:
+  launch-browser: true
+spring:
+  application:
+    name: CoOrder
+server:
+  port: 8089
