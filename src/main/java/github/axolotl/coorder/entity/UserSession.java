@@ -35,4 +35,8 @@ public class UserSession {
                 String.valueOf(VaadinSession.getCurrent().getNextUIid()), username, role);
         set(session);
     }
+
+    public static void logout() {
+        VaadinSession.getCurrent().setAttribute("USER_SESSION", null);
+    }
 }

@@ -1,5 +1,6 @@
 package github.axolotl.coorder.view;
 
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -21,14 +22,8 @@ public class AdminView extends VerticalLayout implements BeforeEnterObserver {
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
         this.shopService = shopService;
-    }
 
-    @Override
-    public void beforeEnter(BeforeEnterEvent event) {
         if (!UserSession.isAdmin()) {
-            Notification.show("你没有权限访问此页面。", 3000,
-                    Notification.Position.TOP_END);
-            event.forwardTo(LoginView.class);
             return;
         }
 
@@ -41,5 +36,13 @@ public class AdminView extends VerticalLayout implements BeforeEnterObserver {
 
         horizontalLayout.add(refreshButton);
         add(horizontalLayout);
+    }
+
+    @Override
+    public void beforeEnter(BeforeEnterEvent event) {
+        if (!UserSession.isAdmin()) {
+            Notification.show("你没有权限访问此页面。", 3000, Notification.Position.TOP_END);
+            event.rerouteTo(LoginView.class);
+        }
     }
 }

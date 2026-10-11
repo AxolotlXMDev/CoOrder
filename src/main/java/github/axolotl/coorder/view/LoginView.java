@@ -1,5 +1,6 @@
 package github.axolotl.coorder.view;
 
+import com.vaadin.flow.component.login.LoginForm;
 import github.axolotl.coorder.entity.UserSession;
 import github.axolotl.coorder.service.AdminService;
 
@@ -46,7 +47,6 @@ public class LoginView extends VerticalLayout {
                 .set("font-weight", "600")
                 .set("color", "#1b2430")
                 .set("letter-spacing", "0.5px");
-
         Paragraph description = new Paragraph("输入用户名，开始你的体验");
         description.getStyle()
                 .set("margin", "0 0 10px")
