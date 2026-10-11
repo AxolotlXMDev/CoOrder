@@ -24,6 +24,7 @@ public class LobbyView extends VerticalLayout implements BeforeEnterObserver {
             event.forwardTo(LoginView.class);
             return;
         }
+
         add("%s[%s]，欢迎登录！ ".formatted(UserSession.get().getName(), UserSession.get().getRole()));
     }
 }

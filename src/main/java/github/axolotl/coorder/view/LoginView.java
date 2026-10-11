@@ -59,7 +59,6 @@ public class LoginView extends VerticalLayout {
         usernameField.setPlaceholder("请输入用户名");
         usernameField.setMaxLength(30);
         usernameField.setAutofocus(true);
-        usernameField.focus();
 
         PasswordField passwordField = new PasswordField("密码");
         passwordField.setWidthFull();

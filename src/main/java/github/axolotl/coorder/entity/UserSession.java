@@ -25,8 +25,14 @@ public class UserSession {
         return get() != null;
     }
 
+    public static boolean isAdmin() {
+        UserSession session = get();
+        return session != null && session.getRole() == Role.ADMIN;
+    }
+
     public static void login(String username, Role role) {
-        UserSession session = new UserSession(java.util.UUID.randomUUID().toString(), username, role);
+        UserSession session = new UserSession(
+                String.valueOf(VaadinSession.getCurrent().getNextUIid()), username, role);
         set(session);
     }
 }
