@@ -5,6 +5,7 @@ plugins {
     id("com.vaadin") version "25.2.6"
 }
 
+
 group = "github.axolotl"
 version = "0.0.1-SNAPSHOT"
 description = "CoOrder"
@@ -23,10 +24,14 @@ extra["vaadinVersion"] = "25.2.6"
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webmvc")
-    implementation("org.springframework.boot:spring-boot-starter-security")
-    testImplementation("org.springframework.security:spring-security-test")
+//    implementation("org.springframework.boot:spring-boot-starter-security")
+//    testImplementation("org.springframework.security:spring-security-test")
     developmentOnly("com.vaadin:vaadin-dev")
-    implementation("com.vaadin:vaadin-spring-boot-starter")
+    implementation("com.vaadin:vaadin-spring-boot-starter") {
+        exclude(group = "com.vaadin", module = "hilla")
+        exclude(group = "com.vaadin", module = "hilla-dev")
+        exclude(group = "com.vaadin", module = "flow-react")
+    }
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test")
