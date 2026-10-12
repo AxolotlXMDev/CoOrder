@@ -4,34 +4,46 @@ import com.vaadin.flow.component.Key;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.dialog.Dialog;
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
 
 public class JoinRoomDialog extends Dialog {
+    private TextField roomIdField;
     public JoinRoomDialog() {
-        setWidth("400px");
-        setHeight("300px");
+        setWidth("300px");
+        setHeight("150px");
         setCloseOnEsc(true);
         setCloseOnOutsideClick(true);
 
-        Button closeButton = new Button(new Icon("lumo", "cross"), (e) -> close());
-        closeButton.addThemeVariants(ButtonVariant.TERTIARY);
-        getHeader().add(closeButton);
+        FormLayout dialogLayout = createDialogLayout();
+        add(dialogLayout);
 
-        TextField roomIdField = new TextField("房间ID");
-        roomIdField.setWidthFull();
-        roomIdField.setAutofocus(true);
-
-        Button joinButton = new Button("加入房间");
-        joinButton.setWidthFull();
-        joinButton.addClickShortcut(Key.ENTER);
-        joinButton.addClickListener(event -> {
-            String roomId = roomIdField.getValue();
-            //TODO 加入房间的逻辑
-        });
-        joinButton.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
-
-        add(new VerticalLayout(roomIdField, joinButton));
+        Button saveButton = createSaveButton(this);
+        Button cancelButton = new Button("取消", e -> this.close());
+        getFooter().add(cancelButton);
+        getFooter().add(saveButton);
     }
+
+    private FormLayout createDialogLayout() {
+        roomIdField = new TextField("房间ID");
+        roomIdField.setWidthFull();
+
+        FormLayout dialogLayout = new FormLayout(roomIdField);
+        dialogLayout.setAutoResponsive(false);
+        dialogLayout.setExpandFields(true);
+
+        return dialogLayout;
+    }
+    private Button createSaveButton(Dialog dialog) {
+        Button saveButton = new Button("加入", e -> {
+            dialog.close();
+            String roomId = roomIdField.getValue();
+            //TODO 加入房间逻辑
+        });
+        saveButton.addThemeVariants(ButtonVariant.PRIMARY);
+        return saveButton;
+    }
+
 }

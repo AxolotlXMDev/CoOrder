@@ -1,5 +1,6 @@
 package github.axolotl.coorder.view;
 
+import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.login.LoginForm;
 import github.axolotl.coorder.entity.UserSession;
 import github.axolotl.coorder.service.AdminService;
@@ -34,49 +35,33 @@ public class LoginView extends VerticalLayout {
         card.setSpacing(true);
         card.getStyle()
                 .set("background", "#ffffff")
-                .set("border-radius", "18px")
-                .set("box-shadow", "0 10px 40px rgba(24, 39, 75, 0.10)")
-                .set("padding", "40px 36px")
-                .set("box-sizing", "border-box")
-                .set("gap", "16px");
+                .set("border-radius", "16px")
+                .set("box-shadow", "0 8px 32px rgba(0,0,0,0.12)")
+                .set("padding", "32px")
+                .set("box-sizing", "border-box");
 
         H2 title = new H2("欢迎进入");
-        title.getStyle()
-                .set("margin", "0")
-                .set("font-size", "1.55rem")
-                .set("font-weight", "600")
-                .set("color", "#1b2430")
-                .set("letter-spacing", "0.5px");
         Paragraph description = new Paragraph("输入用户名，开始你的体验");
-        description.getStyle()
-                .set("margin", "0 0 10px")
-                .set("color", "#8a94a6")
-                .set("font-size", "0.9rem")
-                .set("line-height", "1.5");
 
         TextField usernameField = new TextField("用户名");
-        usernameField.setWidthFull();
         usernameField.setPlaceholder("请输入用户名");
         usernameField.setMaxLength(30);
         usernameField.setAutofocus(true);
+        usernameField.setWidthFull();
 
         PasswordField passwordField = new PasswordField("密码");
-        passwordField.setWidthFull();
         passwordField.setPlaceholder("请输入密码（仅管理员需要）");
         passwordField.setMaxLength(30);
+        passwordField.setWidthFull();
+
+        FormLayout loginForm = new FormLayout(usernameField, passwordField);
+        loginForm.setAutoResponsive(false);
+        loginForm.setWidthFull();
+        loginForm.setExpandFields(true);
 
         Button submit = new Button("登录");
         submit.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_LARGE);
         submit.setWidthFull();
-        submit.getStyle()
-                .set("margin-top", "6px")
-                .set("border-radius", "10px")
-                .set("font-weight", "600")
-                .set("letter-spacing", "0.5px")
-                .set("cursor", "pointer")
-                .set("--lumo-primary-color", "#3b6ef5")
-                .set("--lumo-primary-color-50pct", "rgba(59, 110, 245, 0.5)")
-                .set("--lumo-primary-color-10pct", "rgba(59, 110, 245, 0.1)");
 
         submit.addClickListener(event -> {
             String username = usernameField.getValue().trim();
@@ -108,7 +93,7 @@ public class LoginView extends VerticalLayout {
         passwordField.addValueChangeListener(event -> passwordField.setInvalid(false));
         submit.addClickShortcut(Key.ENTER);
 
-        card.add(title, description, usernameField, passwordField, submit);
+        card.add(title, description, loginForm, submit);
         add(card);
     }
 

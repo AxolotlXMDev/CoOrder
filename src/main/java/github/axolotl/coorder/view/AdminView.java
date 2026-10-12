@@ -28,10 +28,10 @@ public class AdminView extends VerticalLayout implements BeforeEnterObserver {
         }
 
         HorizontalLayout horizontalLayout = new HorizontalLayout();
-        Button refreshButton = new Button("刷新Shops", VaadinIcon.REFRESH.create(), e -> {
-            Notification.show("刷新中", 1000, Notification.Position.TOP_END);
-            shopService.reloadShops();
-            Notification.show("刷新成功", 3000, Notification.Position.TOP_END);
+        Button refreshButton = new Button("重载Shops", VaadinIcon.REFRESH.create(), e -> {
+            Notification.show("重载中", 1000, Notification.Position.TOP_END);
+            shopService.reloadShopsByUser();
+            Notification.show("重载成功，加载了 %d 个店铺".formatted(shopService.getShopCount()), 3000, Notification.Position.TOP_END);
         });
 
         horizontalLayout.add(refreshButton);

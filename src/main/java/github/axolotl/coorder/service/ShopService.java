@@ -1,6 +1,8 @@
 package github.axolotl.coorder.service;
 
+import com.vaadin.flow.router.AccessDeniedException;
 import github.axolotl.coorder.entity.Shop;
+import github.axolotl.coorder.entity.UserSession;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,7 +35,13 @@ public class ShopService {
                 .orElse(null);
     }
 
-    public void reloadShops() {
+    public void reloadShopsByUser() {
+        if (!UserSession.isAdmin()) {
+            throw new AccessDeniedException();
+        }
+        reloadShops();
+    }
+    private void reloadShops() {
         shops = new ArrayList<>();
         File folder = new File(shopsPath);
         if (!folder.exists()) {
@@ -52,5 +60,9 @@ public class ShopService {
                 }
             }
         }
+    }
+
+    public int getShopCount() {
+        return shops.size();
     }
 }

@@ -50,10 +50,6 @@ public class LobbyView extends VerticalLayout implements BeforeEnterObserver {
         Div bar = new Div();
         bar.setWidthFull();
         bar.addClassNames(LumoUtility.Background.BASE, LumoUtility.BoxShadow.SMALL);
-        bar.getStyle()
-                .set("position", "sticky")
-                .set("top", "0")
-                .set("z-index", "10");
 
         VerticalLayout inner = new VerticalLayout();
         inner.setWidthFull();
@@ -135,17 +131,7 @@ public class LobbyView extends VerticalLayout implements BeforeEnterObserver {
                 LumoUtility.Gap.SMALL
         );
 
-        // 外框线，便于区分每个店铺卡片
-        card.getStyle()
-                .set("border", "1px solid var(--lumo-contrast-20pct)")
-                .set("box-sizing", "border-box");
-        // 可选：鼠标悬停时边框加深，进一步突出当前卡片
-        card.getElement().executeJs(
-                "this.addEventListener('mouseenter', () => this.style.borderColor = 'var(--lumo-primary-color)');" +
-                        "this.addEventListener('mouseleave', () => this.style.borderColor = 'var(--lumo-contrast-20pct)');"
-        );
 
-        // 店铺名字和描述区
         H3 name = new H3(shop.getName());
         name.addClassNames(LumoUtility.Margin.NONE, LumoUtility.FontSize.LARGE);
 

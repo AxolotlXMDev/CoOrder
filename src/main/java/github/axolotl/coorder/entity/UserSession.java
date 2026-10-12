@@ -39,4 +39,12 @@ public class UserSession {
     public static void logout() {
         VaadinSession.getCurrent().setAttribute("USER_SESSION", null);
     }
+    public static String getUserId() {
+        UserSession session = get();
+        if (session != null) {
+            return session.getId();
+        } else {
+            return null;
+        }
+    }
 }
