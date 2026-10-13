@@ -16,11 +16,15 @@ import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.html.H2;
 import com.vaadin.flow.component.html.Paragraph;
 import com.vaadin.flow.component.Component;
+import github.axolotl.coorder.service.UserSessionService;
 
 @Route("login")
 public class LoginView extends VerticalLayout {
 
-    public LoginView(AdminService adminService) {
+    private final UserSessionService userSessionService;
+
+    public LoginView(AdminService adminService, UserSessionService userSessionService) {
+        this.userSessionService = userSessionService;
         setSizeFull();
         setPadding(false);
         setSpacing(false);
@@ -75,7 +79,7 @@ public class LoginView extends VerticalLayout {
 
             if (username.equals(adminService.getAdminUsername())) {
                 if (adminService.verify(username, passwordField.getValue())) {
-                    UserSession.login(username, UserSession.Role.ADMIN);
+                    userSessionService.login(username, UserSession.Role.ADMIN);
                     UI.getCurrent().navigate(AdminView.class);
                     return;
                 }
@@ -85,7 +89,7 @@ public class LoginView extends VerticalLayout {
                 return;
             }
 
-            UserSession.login(username, UserSession.Role.GUEST);
+            userSessionService.login(username, UserSession.Role.GUEST);
             UI.getCurrent().navigate(LobbyView.class);
         });
 

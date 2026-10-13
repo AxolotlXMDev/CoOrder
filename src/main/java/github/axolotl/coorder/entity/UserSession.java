@@ -3,15 +3,21 @@ package github.axolotl.coorder.entity;
 import com.vaadin.flow.server.VaadinSession;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.Getter;
 
-@Data
-@AllArgsConstructor
+@Getter
 public class UserSession {
     public enum Role {ADMIN, GUEST}
 
-    private String id;
-    private String name;
-    private Role role;
+    private final String id;
+    private final String name;
+    private final Role role;
+
+    public UserSession(String id, String name, Role role) {
+        this.id = id;
+        this.name = name;
+        this.role = role;
+    }
 
     public static UserSession get() {
         return (UserSession) VaadinSession.getCurrent().getAttribute("USER_SESSION");
@@ -22,29 +28,17 @@ public class UserSession {
     }
 
     public static boolean isLoggedIn() {
-        return get() != null;
+        return UserSession.get() != null;
     }
 
     public static boolean isAdmin() {
-        UserSession session = get();
-        return session != null && session.getRole() == Role.ADMIN;
-    }
-
-    public static void login(String username, Role role) {
-        UserSession session = new UserSession(
-                String.valueOf(VaadinSession.getCurrent().getNextUIid()), username, role);
-        set(session);
+        UserSession session = UserSession.get();
+        return session != null && session.getRole() == UserSession.Role.ADMIN;
     }
 
     public static void logout() {
         VaadinSession.getCurrent().setAttribute("USER_SESSION", null);
     }
-    public static String getUserId() {
-        UserSession session = get();
-        if (session != null) {
-            return session.getId();
-        } else {
-            return null;
-        }
-    }
+
+
 }

@@ -19,6 +19,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import github.axolotl.coorder.entity.Shop;
 import github.axolotl.coorder.entity.UserSession;
 import github.axolotl.coorder.service.ShopService;
+import github.axolotl.coorder.service.UserSessionService;
 import github.axolotl.coorder.view.dialog.JoinRoomDialog;
 import github.axolotl.coorder.view.dialog.ShopInfoDialog;
 
@@ -27,8 +28,9 @@ import java.util.List;
 @Route("/")
 public class LobbyView extends VerticalLayout implements BeforeEnterObserver {
     private final ShopService shopService;
+    private final UserSessionService userSessionService;
 
-    public LobbyView(ShopService shopService) {
+    public LobbyView(ShopService shopService, UserSessionService userSessionService) {
         setPadding(false);
         setSpacing(false);
         setWidthFull();
@@ -38,6 +40,7 @@ public class LobbyView extends VerticalLayout implements BeforeEnterObserver {
         getStyle().set("overflow", "auto");
 
         this.shopService = shopService;
+        this.userSessionService = userSessionService;
 
         if (!UserSession.isLoggedIn()) {
             return;
@@ -56,10 +59,12 @@ public class LobbyView extends VerticalLayout implements BeforeEnterObserver {
         inner.setPadding(true);
         inner.setSpacing(true);
 
-        H2 hello = new H2("Hi, " + UserSession.get().getName());
+
+        UserSession session = UserSession.get();
+        H2 hello = new H2("Hi, " + session.getName());
         hello.addClassNames(LumoUtility.Margin.NONE, LumoUtility.FontSize.XLARGE);
 
-        Span roleBadge = new Span(String.valueOf(UserSession.get().getRole()));
+        Span roleBadge = new Span(String.valueOf(session.getRole()));
         roleBadge.addClassNames(
                 LumoUtility.Background.PRIMARY_10,
                 LumoUtility.TextColor.PRIMARY,
@@ -119,6 +124,7 @@ public class LobbyView extends VerticalLayout implements BeforeEnterObserver {
         shops.forEach(shop -> section.add(buildShopRow(shop)));
         return section;
     }
+
     private VerticalLayout buildShopRow(Shop shop) {
         VerticalLayout card = new VerticalLayout();
         card.setWidthFull();

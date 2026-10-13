@@ -11,17 +11,20 @@ import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 import github.axolotl.coorder.entity.UserSession;
 import github.axolotl.coorder.service.ShopService;
+import github.axolotl.coorder.service.UserSessionService;
 
 @Route("admin")
 public class AdminView extends VerticalLayout implements BeforeEnterObserver {
 
     private final ShopService shopService;
+    private final UserSessionService userSessionService;
 
-    public AdminView(ShopService shopService) {
+    public AdminView(ShopService shopService, UserSessionService userSessionService) {
         setSizeFull();
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
         this.shopService = shopService;
+        this.userSessionService = userSessionService;
 
         if (!UserSession.isAdmin()) {
             return;

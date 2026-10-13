@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.Objects;
+
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -27,5 +29,17 @@ public class Product {
         } else {
             return "%.2f".formatted(price);
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Product product = (Product) o;
+        return Double.compare(price, product.price) == 0 && minPurchaseQuantity == product.minPurchaseQuantity && Objects.equals(name, product.name) && Objects.equals(description, product.description);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, description, price, minPurchaseQuantity);
     }
 }

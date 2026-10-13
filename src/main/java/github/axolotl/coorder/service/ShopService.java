@@ -18,10 +18,15 @@ import java.util.List;
 
 @Service
 public class ShopService {
+    private final UserSessionService userSessionService;
     @Value("${app.config.shops-path}")
     private String shopsPath;
     @Getter
     private List<Shop> shops;
+
+    public ShopService(UserSessionService userSessionService) {
+        this.userSessionService = userSessionService;
+    }
 
     @PostConstruct
     public void init() {
@@ -41,7 +46,8 @@ public class ShopService {
         }
         reloadShops();
     }
-    private void reloadShops() {
+
+    public void reloadShops() {
         shops = new ArrayList<>();
         File folder = new File(shopsPath);
         if (!folder.exists()) {
