@@ -42,4 +42,8 @@ public class Product {
     public int hashCode() {
         return Objects.hash(name, description, price, minPurchaseQuantity);
     }
+
+    public String getId() {
+        return String.valueOf(hashCode());//TODO: 改为json存储id或者读入时自增生成id（现在数据量小可用，但是仍有碰撞风险）
+    }
 }

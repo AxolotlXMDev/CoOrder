@@ -20,4 +20,16 @@ public class Shop {
     public List<ProductSection> getSections() {
         return sections == null ? new ArrayList<>() : sections;
     }
+
+    public List<Product> getAllProducts() {
+        List<Product> allProducts = new ArrayList<>();
+        if (sections != null) {
+            for (ProductSection section : sections) {
+                if (section.getProducts() != null) {
+                    allProducts.addAll(section.getProducts());
+                }
+            }
+        }
+        return allProducts;
+    }
 }

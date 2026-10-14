@@ -36,7 +36,8 @@ public class AdminView extends VerticalLayout implements BeforeEnterObserver {
             shopService.reloadShopsByUser();
             Notification.show("重载成功，加载了 %d 个店铺".formatted(shopService.getShopCount()), 3000, Notification.Position.TOP_END);
         });
-
+        //TODO: 实现上传店铺JSON文件功能
+        //TODO: 实现店铺访问的开关
         horizontalLayout.add(refreshButton);
         add(horizontalLayout);
     }
