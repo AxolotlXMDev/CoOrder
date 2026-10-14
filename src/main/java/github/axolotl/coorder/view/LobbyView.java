@@ -13,24 +13,30 @@ import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import github.axolotl.coorder.entity.Shop;
 import github.axolotl.coorder.entity.UserSession;
 import github.axolotl.coorder.service.ShopService;
 import github.axolotl.coorder.service.UserSessionService;
-import github.axolotl.coorder.view.dialog.JoinRoomDialog;
-import github.axolotl.coorder.view.dialog.ShopInfoDialog;
+import github.axolotl.coorder.view.vaadincomponent.JoinRoomDialog;
+import github.axolotl.coorder.view.vaadincomponent.ShopInfoDialog;
 
 import java.util.List;
 
 @Route("/")
-public class LobbyView extends VerticalLayout implements BeforeEnterObserver {
+public class LobbyView extends VerticalLayout implements CheckBeforeEnterObserver {
     private final ShopService shopService;
     private final UserSessionService userSessionService;
 
     public LobbyView(ShopService shopService, UserSessionService userSessionService) {
+        this.shopService = shopService;
+        this.userSessionService = userSessionService;
+
+        if (!canAccess()) {
+            return;
+        }
+
         setPadding(false);
         setSpacing(false);
         setWidthFull();
@@ -39,12 +45,6 @@ public class LobbyView extends VerticalLayout implements BeforeEnterObserver {
         addClassNames(LumoUtility.Background.CONTRAST_5);
         getStyle().set("overflow", "auto");
 
-        this.shopService = shopService;
-        this.userSessionService = userSessionService;
-
-        if (!UserSession.isLoggedIn()) {
-            return;
-        }
 
         add(buildStickyBar(), buildShopSection());
     }
@@ -148,7 +148,7 @@ public class LobbyView extends VerticalLayout implements BeforeEnterObserver {
         infoBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
 
         Button createBtn = new Button("创建房间", VaadinIcon.PLUS.create(), e -> {
-            // TODO: 创建房间
+
         });
         createBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SMALL);
 
@@ -163,10 +163,14 @@ public class LobbyView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        if (!UserSession.isLoggedIn()) {
-            Notification.show("你还没有登录，请先登录。", 3000, Notification.Position.TOP_END);
-            event.rerouteTo(LoginView.class);
-        }
+    public boolean canAccess() {
+        return UserSession.isLoggedIn();
     }
+
+    @Override
+    public void doWithAccessDenied(BeforeEnterEvent event) {
+        Notification.show("你还没有登录，请先登录。", 3000, Notification.Position.TOP_END);
+        event.rerouteTo(LoginView.class);
+    }
+
 }

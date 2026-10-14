@@ -1,4 +1,4 @@
-package github.axolotl.coorder.view.dialog;
+package github.axolotl.coorder.view.vaadincomponent;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.Text;

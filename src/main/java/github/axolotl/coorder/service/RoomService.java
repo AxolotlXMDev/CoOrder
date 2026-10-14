@@ -1,21 +1,20 @@
-package github.axolotl.coorder.component;
+package github.axolotl.coorder.service;
 
 import github.axolotl.coorder.entity.Room;
 import github.axolotl.coorder.entity.Shop;
-import github.axolotl.coorder.service.ShopService;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Random;
 
-@Component
-public class RoomComponent {
+@Service
+public class RoomService {
     private final HashMap<String, Room> rooms = new HashMap<>();
     private final Random random = new Random();
     private final int roomBound = 1_000_000;
     private final ShopService shopService;
 
-    public RoomComponent(ShopService shopService) {
+    public RoomService(ShopService shopService) {
         this.shopService = shopService;
     }
 
@@ -24,6 +23,19 @@ public class RoomComponent {
         Shop shop = shopService.getShopById(shopId);
         Room room = new Room(roomId, userId, shop);
         rooms.put(roomId, room);
+    }
+
+    public String findRoomWithUser(String userId) {
+        for (Room room : rooms.values()) {
+            if (room.hasUser(userId)) {
+                return room.getRoomId();//暂不考虑让一个用户加入多个房间的情况
+            }
+        }
+        return null;
+    }
+
+    public boolean roomExists(String roomId) {
+        return rooms.containsKey(roomId);
     }
 
     public Room getRoom(String roomId) {

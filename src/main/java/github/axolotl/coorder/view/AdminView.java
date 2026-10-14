@@ -14,21 +14,22 @@ import github.axolotl.coorder.service.ShopService;
 import github.axolotl.coorder.service.UserSessionService;
 
 @Route("admin")
-public class AdminView extends VerticalLayout implements BeforeEnterObserver {
+public class AdminView extends VerticalLayout implements CheckBeforeEnterObserver {
 
     private final ShopService shopService;
     private final UserSessionService userSessionService;
 
     public AdminView(ShopService shopService, UserSessionService userSessionService) {
-        setSizeFull();
-        setAlignItems(Alignment.CENTER);
-        setJustifyContentMode(JustifyContentMode.CENTER);
         this.shopService = shopService;
         this.userSessionService = userSessionService;
 
-        if (!UserSession.isAdmin()) {
+        if (!canAccess()) {
             return;
         }
+
+        setSizeFull();
+        setAlignItems(Alignment.CENTER);
+        setJustifyContentMode(JustifyContentMode.CENTER);
 
         HorizontalLayout horizontalLayout = new HorizontalLayout();
         Button refreshButton = new Button("重载Shops", VaadinIcon.REFRESH.create(), e -> {
@@ -43,10 +44,14 @@ public class AdminView extends VerticalLayout implements BeforeEnterObserver {
     }
 
     @Override
-    public void beforeEnter(BeforeEnterEvent event) {
-        if (!UserSession.isAdmin()) {
-            Notification.show("你没有权限访问此页面。", 3000, Notification.Position.TOP_END);
-            event.rerouteTo(LoginView.class);
-        }
+    public boolean canAccess() {
+        return UserSession.isAdmin();
     }
+
+    @Override
+    public void doWithAccessDenied(BeforeEnterEvent event) {
+        Notification.show("你没有权限访问此页面。", 3000, Notification.Position.TOP_END);
+        event.rerouteTo(LoginView.class);
+    }
+
 }

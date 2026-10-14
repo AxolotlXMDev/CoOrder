@@ -22,6 +22,18 @@ public class Room {
         shop.getAllProducts().forEach(product -> purchaseQuantitiesInRoom.put(product.getId(), new SharedValueSignal<>(0)));
     }
 
+    public SharedValueSignal<Integer> getTotalQuantitySignal(String productId) {
+        return purchaseQuantitiesInRoom.get(productId);
+    }
+
+    public int getUserQuantity(String userId, String productId) {
+        UserPurchaseStatus status = userStatuses.get(userId);
+        if (status != null) {
+            return status.getPurchaseQuantities().getOrDefault(productId, 0);
+        }
+        return 0;
+    }
+
     public void joinRoom(String userId) {
         userStatuses.put(userId, new UserPurchaseStatus(userId, roomId));
     }
@@ -37,5 +49,9 @@ public class Room {
                 .sum();
         purchaseQuantitiesInRoom.get(productId).set(totalCount);
 
+    }
+
+    public boolean hasUser(String userId) {
+        return userStatuses.containsKey(userId);
     }
 }
