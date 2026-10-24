@@ -4,12 +4,12 @@ import github.axolotl.coorder.entity.Room;
 import github.axolotl.coorder.entity.Shop;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.Random;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class RoomService {
-    private final HashMap<String, Room> rooms = new HashMap<>();
+    private final Map<String, Room> rooms = new ConcurrentHashMap<>();
     private final Random random = new Random();
     private final int roomBound = 1_000_000;
     private final ShopService shopService;
@@ -27,12 +27,10 @@ public class RoomService {
     }
 
     public String findRoomWithUser(String userId) {
-        for (Room room : rooms.values()) {
-            if (room.hasUser(userId)) {
-                return room.getRoomId();//暂不考虑让一个用户加入多个房间的情况
-            }
-        }
-        return null;
+        return rooms.values().stream()
+                .filter(r -> r.hasUser(userId))
+                .map(Room::getRoomId)
+                .findFirst().orElse(null);
     }
 
     public boolean roomExists(String roomId) {
@@ -44,6 +42,9 @@ public class RoomService {
     }
 
     public boolean joinRoom(String userId, String roomId) {
+        if (findRoomWithUser(userId) != null) {
+            destroyUser(userId);
+        }
         Room room = rooms.get(roomId);
         if (room == null) {
             return false;
@@ -62,5 +63,24 @@ public class RoomService {
             roomId = String.format("%06d", random.nextInt(roomBound));
         } while (rooms.containsKey(roomId));
         return roomId;
+    }
+
+    private void leaveRoom(String userId, String roomId) {
+        Room room = rooms.get(roomId);
+        if (room != null) {
+            room.removeUser(userId);
+            if (room.getOwnerUserId().equals(userId)) {
+                //如果房主离开房间，则销毁房间
+                rooms.remove(roomId);
+            }
+        }
+    }
+
+    public void destroyUser(String userId) {
+        for (Room room : new ArrayList<>(rooms.values())) {//避免ConcurrentModificationException
+            if (room.hasUser(userId)) {
+                leaveRoom(userId, room.getRoomId());
+            }
+        }
     }
 }

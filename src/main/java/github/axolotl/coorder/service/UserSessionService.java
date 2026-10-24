@@ -27,7 +27,6 @@ public class UserSessionService {
 
     public void destroySession(String sessionId) {
         userSessions.remove(sessionId);
-        //TODO: 在Room中清理
     }
 
 }

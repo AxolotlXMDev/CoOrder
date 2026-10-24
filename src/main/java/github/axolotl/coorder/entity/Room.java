@@ -1,9 +1,12 @@
 package github.axolotl.coorder.entity;
 
+import com.vaadin.flow.signals.shared.SharedNumberSignal;
 import com.vaadin.flow.signals.shared.SharedValueSignal;
+import github.axolotl.coorder.service.PriceStaticHelper;
 import lombok.Getter;
 
-import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 
 public class Room {
@@ -13,13 +16,16 @@ public class Room {
     private final String ownerUserId;
     @Getter
     private final Shop shop;
-    private final HashMap<String, SharedValueSignal<Integer>> purchaseQuantitiesInRoom = new HashMap<>();
-    private final HashMap<String, UserPurchaseStatus> userStatuses = new HashMap<>();
+    private final Map<String, SharedValueSignal<Integer>> purchaseQuantitiesInRoom = new ConcurrentHashMap<>();
+    private final Map<String, UserPurchaseStatus> userStatuses = new ConcurrentHashMap<>();
+    private final SharedNumberSignal totalPriceSignalInRoom = new SharedNumberSignal(0d);
+    private final PriceStaticHelper priceStaticHelper;
 
     public Room(String roomId, String ownerUserId, Shop shop) {
         this.roomId = roomId;
         this.ownerUserId = ownerUserId;
         this.shop = shop;
+        this.priceStaticHelper = new PriceStaticHelper(shop);
         shop.getAllProducts().forEach(product -> purchaseQuantitiesInRoom.put(product.getId(), new SharedValueSignal<>(0)));
     }
 
@@ -36,6 +42,9 @@ public class Room {
     }
 
     public void joinRoom(String userId) {
+        if (hasUser(userId)) {
+            return;
+        }
         userStatuses.put(userId, new UserPurchaseStatus(userId, roomId));
     }
 
@@ -43,12 +52,21 @@ public class Room {
         return userStatuses.get(userId);
     }
 
-    public void updateQuantity(String userId, String productId, int count) {
-        userStatuses.get(userId).updateQuantity(productId, count);
-        int totalCount = userStatuses.values().stream()
-                .mapToInt(status -> status.getPurchaseQuantities().getOrDefault(productId, 0))
-                .sum();
-        purchaseQuantitiesInRoom.get(productId).set(totalCount);
+    public void updateQuantity(String userId, String productId, int newQuantity) {
+        int quantityDifference = newQuantity - getUserOldQuantity(userId, productId);//变化的数量
+        double priceDifference = quantityDifference * priceStaticHelper.getPrice(shop.getId(), productId);//变化的价格
+
+        userStatuses.get(userId).updateQuantity(productId, quantityDifference, priceDifference);
+        purchaseQuantitiesInRoom.get(productId).update(current -> current + quantityDifference);//更新房间商品总数量
+        totalPriceSignalInRoom.update(current -> current + priceDifference);//更新房间总价格
+    }
+
+    private int getUserOldQuantity(String userId, String productId) {
+        UserPurchaseStatus status = userStatuses.get(userId);
+        if (status != null) {
+            return status.getOldQuantity(productId);
+        }
+        return 0;
     }
 
     public int getProductQuantityByUser(String userId, String productId) {
@@ -61,5 +79,23 @@ public class Room {
 
     public boolean hasUser(String userId) {
         return userStatuses.containsKey(userId);
+    }
+
+    public void removeUser(String userId) {
+        userStatuses.get(userId).getPurchaseQuantities()
+                .forEach((productId, quantity) -> updateQuantity(userId, productId, 0));
+        userStatuses.remove(userId);
+    }
+
+    public SharedNumberSignal getRoomPriceSignal() {
+        return totalPriceSignalInRoom;
+    }
+
+    public SharedNumberSignal getUserPriceSignal(String userId) {
+        UserPurchaseStatus status = userStatuses.get(userId);
+        if (status != null) {
+            return status.getTotalPriceSignal();
+        }
+        return new SharedNumberSignal(0d);
     }
 }

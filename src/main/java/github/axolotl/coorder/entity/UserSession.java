@@ -38,6 +38,7 @@ public class UserSession {
 
     public static void logout() {
         VaadinSession.getCurrent().setAttribute("USER_SESSION", null);
+        VaadinSession.getCurrent().close();
     }
 
 

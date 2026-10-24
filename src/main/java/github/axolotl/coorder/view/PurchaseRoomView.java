@@ -1,13 +1,16 @@
 package github.axolotl.coorder.view;
 
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.Text;
-import com.vaadin.flow.component.html.H2;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
-import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
+import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.tabs.TabSheet;
+import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.Route;
+import com.vaadin.flow.signals.Signal;
+import com.vaadin.flow.signals.shared.SharedNumberSignal;
 import github.axolotl.coorder.entity.Product;
 import github.axolotl.coorder.entity.Room;
 import github.axolotl.coorder.entity.Shop;
@@ -22,7 +25,6 @@ public class PurchaseRoomView extends VerticalLayout implements CheckBeforeEnter
     private final UserSessionService userSessionService;
     private Room room;
     private String roomId;
-
 
     public PurchaseRoomView(RoomService roomService, UserSessionService userSessionService) {
         this.roomService = roomService;
@@ -39,40 +41,68 @@ public class PurchaseRoomView extends VerticalLayout implements CheckBeforeEnter
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
 
-        HorizontalLayout titleLayout = buildTitleLayout();
-        titleLayout.setHeight("10%");
+        VerticalLayout titleLayout = buildTitleLayout();
         titleLayout.setWidthFull();
 
-        VerticalLayout contentLayout = buildContentLayout();
+        TabSheet contentLayout = buildSectionTabSheet();
         contentLayout.setHeightFull();
         contentLayout.setWidthFull();
 
         add(titleLayout);
         add(contentLayout);
+        //TODO 购物车UI+总价显示
     }
 
-    public HorizontalLayout buildTitleLayout() {
-        HorizontalLayout titleLayout = new HorizontalLayout();
+    public VerticalLayout buildTitleLayout() {
+        VerticalLayout titleLayout = new VerticalLayout();
         titleLayout.setWidthFull();
         titleLayout.setJustifyContentMode(JustifyContentMode.CENTER);
         titleLayout.setAlignItems(Alignment.CENTER);
-        //TODO: 添加标题UI(店铺名称，房间id，个人总价，集体总价)
+        titleLayout.setSpacing(false);
+        titleLayout.setPadding(false);
         UserSession owner = userSessionService.getUserSession(room.getOwnerUserId());
-        titleLayout.add(new Text("房间: %s(所有者: %s)".formatted(room.getRoomId(), owner.getName())));
+
+        titleLayout.add(new Span("%s[%s](所有者: %s)".formatted(
+                room.getShop().getName(),
+                room.getRoomId(),
+                owner.getName()
+        )));
+
+        SharedNumberSignal totalPriceSignal = room.getRoomPriceSignal();
+        SharedNumberSignal userPriceSignal = room.getUserPriceSignal(UserSession.get().getId());
+
+        Span priceSpan = new Span("");
+        Signal.effect(this, () ->
+                priceSpan.setText(getPriceText(totalPriceSignal.get(), userPriceSignal.get())));
+        titleLayout.add(priceSpan);
+
+
         return titleLayout;
     }
 
-    public VerticalLayout buildContentLayout() {
-        VerticalLayout content = new VerticalLayout();
-        //TODO: 商品加购UI
+    private String getPriceText(double totalPrice, double userPrice) {
+        return "个人总价: %.2f元, 房间总价: %.2f元".formatted(userPrice, totalPrice);
+    }
+
+    public TabSheet buildSectionTabSheet() {
+        TabSheet tabSheet = new TabSheet();
+        tabSheet.addThemeVariants(TabSheetVariant.LUMO_NO_PADDING);
+        tabSheet.setHeightFull();
+        tabSheet.setWidthFull();
         Shop shop = room.getShop();
         shop.getSections().forEach(section -> {
-            content.add(new H2(section.getName()));
-            section.getProducts().forEach(product -> {
-                content.add(buildProductPurchaseLayout(product));
-            });
+            VerticalLayout productLayouts = new VerticalLayout();
+            productLayouts.setPadding(false);
+            productLayouts.setSpacing(false);
+            Scroller scroller = new Scroller(productLayouts);
+            scroller.setHeightFull();
+
+            section.getProducts().stream()
+                    .map(this::buildProductPurchaseLayout)
+                    .forEach(productLayouts::add);
+            tabSheet.add(section.getName(), scroller);
         });
-        return content;
+        return tabSheet;
     }
 
     private Component buildProductPurchaseLayout(Product product) {

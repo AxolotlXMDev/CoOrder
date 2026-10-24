@@ -1,12 +1,12 @@
 package github.axolotl.coorder.view.vaadincomponent;
 
 import com.vaadin.flow.component.Component;
-import com.vaadin.flow.component.HasEnabled;
 import com.vaadin.flow.component.button.Button;
+import com.vaadin.flow.component.icon.Icon;
+import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.IntegerField;
-import com.vaadin.flow.data.binder.ValueContext;
 import com.vaadin.flow.signals.shared.SharedValueSignal;
 import github.axolotl.coorder.entity.Product;
 
@@ -21,6 +21,8 @@ public class ProductPurchaseLayout extends HorizontalLayout {
     private int quantity;
     private Button minusButton;
     private IntegerField quantityField;
+    private IntegerField totalQuantityField;
+    private SharedValueSignal<Integer> quantitiesInRoomSignal;
 
     public ProductPurchaseLayout(Product product,
                                  int initQuantity,
@@ -28,35 +30,30 @@ public class ProductPurchaseLayout extends HorizontalLayout {
                                  Consumer<Integer> quantityChangeConsumer) {
         this.quantityChangeConsumer = quantityChangeConsumer;
         this.quantity = initQuantity;
-        setSpacing(true);
+        this.quantitiesInRoomSignal = quantitiesInRoomSignal;
+        setSpacing(false);
         setPadding(false);
         setDefaultVerticalComponentAlignment(Alignment.CENTER);
         setWidthFull();
 
-        Span nameLabel = new Span(product.getName());
-        nameLabel.setWidth("100px");
+        Span nameLabel = new Span(product.getNameAndDescription());
+        Span priceLabel = new Span("¥" + product.getPriceWithMinPurchaseQuantity());
 
+        VerticalLayout productInfoLayout = new VerticalLayout(nameLabel, priceLabel);
         HorizontalLayout quantityLayout = buildQuantityLayout(initQuantity);
 
-        Span totalQuantitySpan = new Span();
-        Signal.effect(this, () -> {
-            Integer total = quantitiesInRoomSignal.get();
-            String totalAmount = total == null ? "0" : String.valueOf(total);
-            totalQuantitySpan.setText("全员总数: " + totalAmount);
-        });
-
-        add(new VerticalLayout(nameLabel, totalQuantitySpan), quantityLayout);
+        add(productInfoLayout, quantityLayout);
     }
 
     private HorizontalLayout buildQuantityLayout(int initQuantity) {
         HorizontalLayout quantityLayout = new HorizontalLayout();
-        quantityLayout.setSpacing(true);
+        quantityLayout.setSpacing(false);
         quantityLayout.setPadding(false);
         quantityLayout.setDefaultVerticalComponentAlignment(Alignment.CENTER);
         quantityLayout.setWidthFull();
 
-        minusButton = new Button("-");
-        minusButton.setWidth("40px");
+        minusButton = new Button(new Icon(VaadinIcon.MINUS));
+//        minusButton.setWidth("40px");
         minusButton.setAriaLabel("减少数量");
         minusButton.addClickListener(e -> updateQuantity(quantity - 1));
 
@@ -64,7 +61,7 @@ public class ProductPurchaseLayout extends HorizontalLayout {
         quantityField = new IntegerField();
         quantityField.setValue(initQuantity);
         quantityField.setAriaLabel("当前数量");
-        quantityField.setWidth("60px");
+        quantityField.setWidth("45px");
         quantityField.setMin(0);
         quantityField.addValueChangeListener(e -> {
             Integer newValue = e.getValue();
@@ -75,14 +72,25 @@ public class ProductPurchaseLayout extends HorizontalLayout {
             }
         });
 
+
+        totalQuantityField = new IntegerField();
+        totalQuantityField.setValue(initQuantity);
+        totalQuantityField.setAriaLabel("房间总数量");
+        totalQuantityField.setWidth("45px");
+        totalQuantityField.setEnabled(false);
+        Signal.effect(this, () -> {
+            Integer total = quantitiesInRoomSignal.get();
+            totalQuantityField.setValue(total);
+            setControlVisible(totalQuantityField, total > 0);
+        });
+
         setQuantityControlsVisible(initQuantity > 0);
 
-        Button plusButton = new Button("+");
-        plusButton.setWidth("40px");
+        Button plusButton = new Button(new Icon(VaadinIcon.PLUS));
         plusButton.setAriaLabel("增加数量");
         plusButton.addClickListener(e -> updateQuantity(quantity + 1));
 
-        quantityLayout.add(minusButton, quantityField, plusButton);
+        quantityLayout.add(minusButton, quantityField, totalQuantityField, plusButton);
         return quantityLayout;
     }
 
@@ -99,8 +107,8 @@ public class ProductPurchaseLayout extends HorizontalLayout {
         quantity = newQuantity;
         if (quantityField.getValue() == null || quantityField.getValue() != newQuantity) {//避免重复触发valueChangeListener
             quantityField.setValue(newQuantity);
-            this.quantityChangeConsumer.accept(newQuantity);
         }
+        this.quantityChangeConsumer.accept(newQuantity);
     }
 
     private void setQuantityControlsVisible(boolean visible) {
@@ -111,9 +119,6 @@ public class ProductPurchaseLayout extends HorizontalLayout {
     private void setControlVisible(Component component, boolean visible) {
         component.getStyle().set("visibility", visible ? "visible" : "hidden");
         component.getStyle().set("pointer-events", visible ? "auto" : "none");
-        if (component instanceof HasEnabled hasEnabled) {
-            hasEnabled.setEnabled(visible);
-        }
     }
 
 }

@@ -7,7 +7,6 @@ import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import tools.jackson.core.JsonParser;
 import tools.jackson.databind.ObjectMapper;
 
 import java.io.File;
@@ -18,15 +17,10 @@ import java.util.List;
 
 @Service
 public class ShopService {
-    private final UserSessionService userSessionService;
     @Value("${app.config.shops-path}")
     private String shopsPath;
     @Getter
     private List<Shop> shops;
-
-    public ShopService(UserSessionService userSessionService) {
-        this.userSessionService = userSessionService;
-    }
 
     @PostConstruct
     public void init() {
