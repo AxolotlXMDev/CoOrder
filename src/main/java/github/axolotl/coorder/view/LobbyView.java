@@ -17,6 +17,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import github.axolotl.coorder.entity.Shop;
 import github.axolotl.coorder.entity.UserSession;
+import github.axolotl.coorder.service.RoomService;
 import github.axolotl.coorder.service.ShopService;
 import github.axolotl.coorder.service.UserSessionService;
 import github.axolotl.coorder.view.vaadincomponent.JoinRoomDialog;
@@ -28,10 +29,12 @@ import java.util.List;
 public class LobbyView extends VerticalLayout implements CheckBeforeEnterObserver {
     private final ShopService shopService;
     private final UserSessionService userSessionService;
+    private final RoomService roomService;
 
-    public LobbyView(ShopService shopService, UserSessionService userSessionService) {
+    public LobbyView(ShopService shopService, UserSessionService userSessionService, RoomService roomService) {
         this.shopService = shopService;
         this.userSessionService = userSessionService;
+        this.roomService = roomService;
 
         if (!canAccess()) {
             return;
@@ -92,7 +95,7 @@ public class LobbyView extends VerticalLayout implements CheckBeforeEnterObserve
         sub.addClassNames(LumoUtility.TextColor.SECONDARY, LumoUtility.FontSize.SMALL);
 
         Button joinRoom = new Button("加入房间", VaadinIcon.HOME.create(),
-                e -> new JoinRoomDialog().open());
+                e -> new JoinRoomDialog(roomService).open());
         joinRoom.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
         joinRoom.setWidthFull();
 
@@ -148,7 +151,9 @@ public class LobbyView extends VerticalLayout implements CheckBeforeEnterObserve
         infoBtn.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_SMALL);
 
         Button createBtn = new Button("创建房间", VaadinIcon.PLUS.create(), e -> {
-
+            String roomId = roomService.createRoom(UserSession.get().getId(), shop.getId());
+            roomService.joinRoom(UserSession.get().getId(), roomId);
+            UI.getCurrent().navigate(PurchaseRoomView.class);
         });
         createBtn.addThemeVariants(ButtonVariant.LUMO_PRIMARY, ButtonVariant.LUMO_SMALL);
 

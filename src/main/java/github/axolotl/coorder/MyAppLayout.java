@@ -22,6 +22,7 @@ import com.vaadin.flow.theme.lumo.LumoUtility;
 import github.axolotl.coorder.view.AdminView;
 import github.axolotl.coorder.view.LobbyView;
 import github.axolotl.coorder.view.LoginView;
+import github.axolotl.coorder.view.PurchaseRoomView;
 
 @Layout
 public class MyAppLayout extends AppLayout {
@@ -49,15 +50,16 @@ public class MyAppLayout extends AppLayout {
         HorizontalLayout horizontalLayout = new HorizontalLayout();
         horizontalLayout.setAlignItems(FlexComponent.Alignment.CENTER);
         horizontalLayout.add(drawerToggle);
-        horizontalLayout.add(new Text("VaadinRemoteManager"));
+        horizontalLayout.add(new Text("CoOrder"));
         return horizontalLayout;
     }
 
     private static SideNav createSideNav() {
         SideNav nav = new SideNav();
         nav.addItem(
-                new SideNavItem("主页222", LobbyView.class, VaadinIcon.DASHBOARD.create()),
+                new SideNavItem("主页", LobbyView.class, VaadinIcon.DASHBOARD.create()),
                 new SideNavItem("管理员配置", AdminView.class, VaadinIcon.COG.create()),
+                new SideNavItem("下单页", PurchaseRoomView.class, VaadinIcon.COG.create()),
                 new SideNavItem("登录", LoginView.class, VaadinIcon.USER.create()));
         return nav;
     }

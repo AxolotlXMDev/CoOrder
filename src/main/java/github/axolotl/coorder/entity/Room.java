@@ -11,6 +11,7 @@ public class Room {
     private final String roomId;
     @Getter
     private final String ownerUserId;
+    @Getter
     private final Shop shop;
     private final HashMap<String, SharedValueSignal<Integer>> purchaseQuantitiesInRoom = new HashMap<>();
     private final HashMap<String, UserPurchaseStatus> userStatuses = new HashMap<>();
@@ -48,7 +49,14 @@ public class Room {
                 .mapToInt(status -> status.getPurchaseQuantities().getOrDefault(productId, 0))
                 .sum();
         purchaseQuantitiesInRoom.get(productId).set(totalCount);
+    }
 
+    public int getProductQuantityByUser(String userId, String productId) {
+        UserPurchaseStatus status = userStatuses.get(userId);
+        if (status != null) {
+            return status.getPurchaseQuantities().getOrDefault(productId, 0);
+        }
+        return 0;
     }
 
     public boolean hasUser(String userId) {

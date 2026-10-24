@@ -18,11 +18,12 @@ public class RoomService {
         this.shopService = shopService;
     }
 
-    public void createRoom(String userId, String shopId) {
+    public String createRoom(String userId, String shopId) {
         String roomId = generateRoomId();
         Shop shop = shopService.getShopById(shopId);
         Room room = new Room(roomId, userId, shop);
         rooms.put(roomId, room);
+        return roomId;
     }
 
     public String findRoomWithUser(String userId) {

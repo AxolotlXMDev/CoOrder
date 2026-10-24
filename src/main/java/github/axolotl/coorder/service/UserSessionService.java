@@ -14,10 +14,15 @@ public class UserSessionService {
         UserSession session = new UserSession(
                 String.valueOf(VaadinSession.getCurrent().getSession().getId()), username, role);
         UserSession.set(session);
+        registerUserSession(session);
     }
 
     private void registerUserSession(UserSession userSession) {
         userSessions.put(userSession.getId(), userSession);
+    }
+
+    public UserSession getUserSession(String id) {
+        return userSessions.get(id);
     }
 
     public void destroySession(String sessionId) {
