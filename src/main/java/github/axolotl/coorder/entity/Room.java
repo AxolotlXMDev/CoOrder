@@ -1,10 +1,12 @@
 package github.axolotl.coorder.entity;
 
+import com.vaadin.flow.shared.util.SharedUtil;
 import com.vaadin.flow.signals.shared.SharedNumberSignal;
 import com.vaadin.flow.signals.shared.SharedValueSignal;
-import github.axolotl.coorder.service.PriceStaticHelper;
+import github.axolotl.coorder.service.PriceHelper;
 import lombok.Getter;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -19,13 +21,13 @@ public class Room {
     private final Map<String, SharedValueSignal<Integer>> purchaseQuantitiesInRoom = new ConcurrentHashMap<>();
     private final Map<String, UserPurchaseStatus> userStatuses = new ConcurrentHashMap<>();
     private final SharedNumberSignal totalPriceSignalInRoom = new SharedNumberSignal(0d);
-    private final PriceStaticHelper priceStaticHelper;
+    private final PriceHelper priceHelper;
 
     public Room(String roomId, String ownerUserId, Shop shop) {
         this.roomId = roomId;
         this.ownerUserId = ownerUserId;
         this.shop = shop;
-        this.priceStaticHelper = new PriceStaticHelper(shop);
+        this.priceHelper = new PriceHelper(shop);
         shop.getAllProducts().forEach(product -> purchaseQuantitiesInRoom.put(product.getId(), new SharedValueSignal<>(0)));
     }
 
@@ -54,7 +56,7 @@ public class Room {
 
     public void updateQuantity(String userId, String productId, int newQuantity) {
         int quantityDifference = newQuantity - getUserOldQuantity(userId, productId);//变化的数量
-        double priceDifference = quantityDifference * priceStaticHelper.getPrice(shop.getId(), productId);//变化的价格
+        double priceDifference = quantityDifference * priceHelper.getPrice(shop.getId(), productId);//变化的价格
 
         userStatuses.get(userId).updateQuantity(productId, quantityDifference, priceDifference);
         purchaseQuantitiesInRoom.get(productId).update(current -> current + quantityDifference);//更新房间商品总数量
@@ -97,5 +99,15 @@ public class Room {
             return status.getTotalPriceSignal();
         }
         return new SharedNumberSignal(0d);
+    }
+
+    public Collection<UserPurchaseStatus> getUserStatus() {
+        return userStatuses.values();
+    }
+
+    public void destroy() {
+        userStatuses.keySet().forEach(this::removeUser);
+        purchaseQuantitiesInRoom.clear();
+        userStatuses.clear();
     }
 }

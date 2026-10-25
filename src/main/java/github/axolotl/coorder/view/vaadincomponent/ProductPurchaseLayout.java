@@ -31,15 +31,15 @@ public class ProductPurchaseLayout extends HorizontalLayout {
         this.quantityChangeConsumer = quantityChangeConsumer;
         this.quantity = initQuantity;
         this.quantitiesInRoomSignal = quantitiesInRoomSignal;
-        setSpacing(false);
-        setPadding(false);
         setDefaultVerticalComponentAlignment(Alignment.CENTER);
         setWidthFull();
 
         Span nameLabel = new Span(product.getNameAndDescription());
-        Span priceLabel = new Span("¥" + product.getPriceWithMinPurchaseQuantity());
+        Span priceLabel = new Span("￥" + product.getPriceWithMinPurchaseQuantity());
+        priceLabel.getStyle().setColor("#FF4500");
 
         VerticalLayout productInfoLayout = new VerticalLayout(nameLabel, priceLabel);
+        productInfoLayout.setPadding(false);
         HorizontalLayout quantityLayout = buildQuantityLayout(initQuantity);
 
         add(productInfoLayout, quantityLayout);
@@ -47,13 +47,11 @@ public class ProductPurchaseLayout extends HorizontalLayout {
 
     private HorizontalLayout buildQuantityLayout(int initQuantity) {
         HorizontalLayout quantityLayout = new HorizontalLayout();
-        quantityLayout.setSpacing(false);
         quantityLayout.setPadding(false);
         quantityLayout.setDefaultVerticalComponentAlignment(Alignment.CENTER);
         quantityLayout.setWidthFull();
 
         minusButton = new Button(new Icon(VaadinIcon.MINUS));
-//        minusButton.setWidth("40px");
         minusButton.setAriaLabel("减少数量");
         minusButton.addClickListener(e -> updateQuantity(quantity - 1));
 

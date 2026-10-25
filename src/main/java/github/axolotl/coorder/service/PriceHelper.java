@@ -9,10 +9,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PriceStaticHelper {
+public class PriceHelper {
     private final Map<UniqueProduct, Double> priceMap;
 
-    public PriceStaticHelper(Shop shop) {
+    public PriceHelper(Shop shop) {
         Map<UniqueProduct, Double> priceMap = new HashMap<>();
         shop.getAllProducts().forEach(product -> {
             UniqueProduct uniqueProduct = new UniqueProduct(product.getId(), shop.getId());

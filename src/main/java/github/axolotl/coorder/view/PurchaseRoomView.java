@@ -1,10 +1,13 @@
 package github.axolotl.coorder.view;
 
 import com.vaadin.flow.component.Component;
+import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
+import com.vaadin.flow.component.popover.PopoverPosition;
 import com.vaadin.flow.component.tabs.TabSheet;
 import com.vaadin.flow.component.tabs.TabSheetVariant;
 import com.vaadin.flow.router.BeforeEnterEvent;
@@ -18,11 +21,13 @@ import github.axolotl.coorder.entity.UserSession;
 import github.axolotl.coorder.service.RoomService;
 import github.axolotl.coorder.service.UserSessionService;
 import github.axolotl.coorder.view.vaadincomponent.ProductPurchaseLayout;
+import github.axolotl.coorder.view.vaadincomponent.RoomMemberPopover;
 
 @Route("purchase-room")
 public class PurchaseRoomView extends VerticalLayout implements CheckBeforeEnterObserver {
     private final RoomService roomService;
     private final UserSessionService userSessionService;
+    private String userId;
     private Room room;
     private String roomId;
 
@@ -34,55 +39,86 @@ public class PurchaseRoomView extends VerticalLayout implements CheckBeforeEnter
             return;
         }
 
-        roomId = roomService.findRoomWithUser(UserSession.get().getId());
         room = roomService.getRoom(roomId);
 
+        SharedNumberSignal priceSignal = room.getRoomPriceSignal();
+        Signal.effect(this, () -> {
+            priceSignal.get();//金额有变化，看一下是不是被踢出
+            if (!room.hasUser(userId)) {
+                UI.getCurrent().navigate(LobbyView.class);
+            }
+        });
+
+        setPadding(false);
         setSizeFull();
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
 
-        VerticalLayout titleLayout = buildTitleLayout();
-        titleLayout.setWidthFull();
-
         TabSheet contentLayout = buildSectionTabSheet();
-        contentLayout.setHeightFull();
-        contentLayout.setWidthFull();
+        HorizontalLayout buttonLayout = buildBottomLayout();
 
-        add(titleLayout);
         add(contentLayout);
+        add(buttonLayout);
         //TODO 购物车UI+总价显示
     }
 
-    public VerticalLayout buildTitleLayout() {
-        VerticalLayout titleLayout = new VerticalLayout();
-        titleLayout.setWidthFull();
-        titleLayout.setJustifyContentMode(JustifyContentMode.CENTER);
-        titleLayout.setAlignItems(Alignment.CENTER);
-        titleLayout.setSpacing(false);
-        titleLayout.setPadding(false);
-        UserSession owner = userSessionService.getUserSession(room.getOwnerUserId());
+    public HorizontalLayout buildBottomLayout() {
+        HorizontalLayout bottomLayout = new HorizontalLayout();
+        bottomLayout.setWidthFull();
+        bottomLayout.setJustifyContentMode(JustifyContentMode.CENTER);
+        bottomLayout.setAlignItems(Alignment.CENTER);
+        bottomLayout.setSpacing(false);
+        bottomLayout.setPadding(false);
 
-        titleLayout.add(new Span("%s[%s](所有者: %s)".formatted(
-                room.getShop().getName(),
-                room.getRoomId(),
-                owner.getName()
-        )));
+        VerticalLayout homeLayout = new VerticalLayout();
+        {
+            homeLayout.setSpacing(false);
 
-        SharedNumberSignal totalPriceSignal = room.getRoomPriceSignal();
-        SharedNumberSignal userPriceSignal = room.getUserPriceSignal(UserSession.get().getId());
+            Span homeNumberSpan = new Span("房间号: %s".formatted(room.getRoomId()));
+            homeNumberSpan.getStyle().setFontSize("16px");
+            Span shopNameSpan = new Span("%s[%s]".formatted(room.getShop().getName(), room.getShop().getId()));
+            homeLayout.add(homeNumberSpan);
+            homeLayout.add(shopNameSpan);
 
-        Span priceSpan = new Span("");
-        Signal.effect(this, () ->
-                priceSpan.setText(getPriceText(totalPriceSignal.get(), userPriceSignal.get())));
-        titleLayout.add(priceSpan);
+            RoomMemberPopover popover = new RoomMemberPopover(roomService, userSessionService, room, UserSession.get().getId());
+            popover.setPosition(PopoverPosition.TOP);
+            popover.setTarget(homeLayout);
+
+        }
+        VerticalLayout priceLayout = new VerticalLayout();
+        {
+            priceLayout.setSpacing(false);
+            priceLayout.setPadding(false);
+
+            SharedNumberSignal totalPriceSignal = room.getRoomPriceSignal();
+            SharedNumberSignal userPriceSignal = room.getUserPriceSignal(UserSession.get().getId());
+
+            Span userPriceSpan = new Span("￥0");
+            userPriceSpan.getStyle().setColor("#FF4500");
+            userPriceSpan.getStyle().setFontSize("24px");
 
 
-        return titleLayout;
+            Span totalPriceSpan = new Span("￥0");
+            totalPriceSpan.getStyle().setColor("#FF6A33");
+            totalPriceSpan.getStyle().setFontSize("16px");
+
+
+            Signal.effect(this, () -> {
+                userPriceSpan.setText("￥%.2f".formatted(userPriceSignal.get()));
+                totalPriceSpan.setText("房间总价: ￥%.2f".formatted(totalPriceSignal.get()));
+            });
+            priceLayout.add(userPriceSpan);
+            priceLayout.add(totalPriceSpan);
+            priceLayout.addClickListener(e -> {
+                //TODO 显示加购的全部商品、每个人花费
+            });
+        }
+        bottomLayout.add(homeLayout, priceLayout);
+
+
+        return bottomLayout;
     }
 
-    private String getPriceText(double totalPrice, double userPrice) {
-        return "个人总价: %.2f元, 房间总价: %.2f元".formatted(userPrice, totalPrice);
-    }
 
     public TabSheet buildSectionTabSheet() {
         TabSheet tabSheet = new TabSheet();
@@ -92,8 +128,6 @@ public class PurchaseRoomView extends VerticalLayout implements CheckBeforeEnter
         Shop shop = room.getShop();
         shop.getSections().forEach(section -> {
             VerticalLayout productLayouts = new VerticalLayout();
-            productLayouts.setPadding(false);
-            productLayouts.setSpacing(false);
             Scroller scroller = new Scroller(productLayouts);
             scroller.setHeightFull();
 
@@ -120,7 +154,8 @@ public class PurchaseRoomView extends VerticalLayout implements CheckBeforeEnter
     @Override
     public boolean canAccess() {
         if (!UserSession.isLoggedIn()) return false;
-        return roomService.findRoomWithUser(UserSession.get().getId()) != null;
+        userId = UserSession.get().getId();
+        return (roomId = roomService.findRoomWithUser(userId)) != null;
     }
 
     @Override
