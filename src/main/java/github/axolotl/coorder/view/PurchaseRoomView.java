@@ -1,6 +1,5 @@
 package github.axolotl.coorder.view;
 
-import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.notification.Notification;
@@ -14,12 +13,14 @@ import com.vaadin.flow.router.BeforeEnterEvent;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.signals.Signal;
 import com.vaadin.flow.signals.shared.SharedNumberSignal;
-import github.axolotl.coorder.entity.Product;
+import com.vaadin.flow.signals.shared.SharedValueSignal;
 import github.axolotl.coorder.entity.Room;
 import github.axolotl.coorder.entity.Shop;
 import github.axolotl.coorder.entity.UserSession;
+import github.axolotl.coorder.entity.event.RoomMemberChangeEvent;
 import github.axolotl.coorder.service.RoomService;
 import github.axolotl.coorder.service.UserSessionService;
+import github.axolotl.coorder.view.vaadincomponent.PriceInfoPopover;
 import github.axolotl.coorder.view.vaadincomponent.ProductPurchaseLayout;
 import github.axolotl.coorder.view.vaadincomponent.RoomMemberPopover;
 
@@ -41,9 +42,9 @@ public class PurchaseRoomView extends VerticalLayout implements CheckBeforeEnter
 
         room = roomService.getRoom(roomId);
 
-        SharedNumberSignal priceSignal = room.getRoomPriceSignal();
+        SharedValueSignal<RoomMemberChangeEvent> roomMemberEventSignal = room.getRoomMemberEventSignal();
         Signal.effect(this, () -> {
-            priceSignal.get();//金额有变化，看一下是不是被踢出
+            roomMemberEventSignal.get();
             if (!room.hasUser(userId)) {
                 UI.getCurrent().navigate(LobbyView.class);
             }
@@ -109,9 +110,10 @@ public class PurchaseRoomView extends VerticalLayout implements CheckBeforeEnter
             });
             priceLayout.add(userPriceSpan);
             priceLayout.add(totalPriceSpan);
-            priceLayout.addClickListener(e -> {
-                //TODO 显示加购的全部商品、每个人花费
-            });
+
+            PriceInfoPopover popover = new PriceInfoPopover(room);
+            popover.setPosition(PopoverPosition.TOP);
+            popover.setTarget(priceLayout);
         }
         bottomLayout.add(homeLayout, priceLayout);
 
@@ -132,24 +134,12 @@ public class PurchaseRoomView extends VerticalLayout implements CheckBeforeEnter
             scroller.setHeightFull();
 
             section.getProducts().stream()
-                    .map(this::buildProductPurchaseLayout)
+                    .map(product -> ProductPurchaseLayout.forRoom(room, product))
                     .forEach(productLayouts::add);
             tabSheet.add(section.getName(), scroller);
         });
         return tabSheet;
     }
-
-    private Component buildProductPurchaseLayout(Product product) {
-        String userId = UserSession.get().getId();
-        String productId = product.getId();
-        return new ProductPurchaseLayout(
-                product,
-                room.getProductQuantityByUser(userId, productId),
-                room.getTotalQuantitySignal(productId),
-                quantity -> room.updateQuantity(userId, productId, quantity)
-        );
-    }
-
 
     @Override
     public boolean canAccess() {

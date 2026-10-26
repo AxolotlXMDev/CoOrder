@@ -68,11 +68,12 @@ public class RoomService {
     public void leaveRoom(String userId, String roomId) {
         Room room = rooms.get(roomId);
         if (room != null) {
-            room.removeUser(userId);
             if (room.getOwnerUserId().equals(userId)) {
                 //房主离开->销毁房间
                 room.destroy();
                 rooms.remove(roomId);
+            }else{
+                room.removeUser(userId);
             }
         }
     }

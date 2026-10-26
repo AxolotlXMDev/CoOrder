@@ -1,8 +1,10 @@
 package github.axolotl.coorder.entity;
 
-import com.vaadin.flow.shared.util.SharedUtil;
 import com.vaadin.flow.signals.shared.SharedNumberSignal;
 import com.vaadin.flow.signals.shared.SharedValueSignal;
+import github.axolotl.coorder.entity.event.RoomMemberChangeEvent;
+import github.axolotl.coorder.entity.event.RoomNumberChangeEventType;
+import github.axolotl.coorder.entity.event.UserPurchaseUpdateEvent;
 import github.axolotl.coorder.service.PriceHelper;
 import lombok.Getter;
 
@@ -22,6 +24,11 @@ public class Room {
     private final Map<String, UserPurchaseStatus> userStatuses = new ConcurrentHashMap<>();
     private final SharedNumberSignal totalPriceSignalInRoom = new SharedNumberSignal(0d);
     private final PriceHelper priceHelper;
+    @Getter
+    private final SharedValueSignal<RoomMemberChangeEvent> roomMemberEventSignal = new SharedValueSignal<>(RoomMemberChangeEvent.EMPTY);
+    @Getter
+    private final SharedValueSignal<UserPurchaseUpdateEvent> purchaseUpdateEventSignal = new SharedValueSignal<>(UserPurchaseUpdateEvent.EMPTY);
+
 
     public Room(String roomId, String ownerUserId, Shop shop) {
         this.roomId = roomId;
@@ -47,6 +54,7 @@ public class Room {
         if (hasUser(userId)) {
             return;
         }
+        roomMemberEventSignal.set(new RoomMemberChangeEvent(RoomNumberChangeEventType.USER_JOIN, userId));
         userStatuses.put(userId, new UserPurchaseStatus(userId, roomId));
     }
 
@@ -55,11 +63,13 @@ public class Room {
     }
 
     public void updateQuantity(String userId, String productId, int newQuantity) {
-        int quantityDifference = newQuantity - getUserOldQuantity(userId, productId);//变化的数量
+        int oldQuantity = getUserOldQuantity(userId, productId);
+        int quantityDifference = newQuantity - oldQuantity;//变化的数量
         double priceDifference = quantityDifference * priceHelper.getPrice(shop.getId(), productId);//变化的价格
 
         userStatuses.get(userId).updateQuantity(productId, quantityDifference, priceDifference);
         purchaseQuantitiesInRoom.get(productId).update(current -> current + quantityDifference);//更新房间商品总数量
+        purchaseUpdateEventSignal.set(new UserPurchaseUpdateEvent(userId, productId, oldQuantity, newQuantity));
         totalPriceSignalInRoom.update(current -> current + priceDifference);//更新房间总价格
     }
 
@@ -86,6 +96,7 @@ public class Room {
     public void removeUser(String userId) {
         userStatuses.get(userId).getPurchaseQuantities()
                 .forEach((productId, quantity) -> updateQuantity(userId, productId, 0));
+        roomMemberEventSignal.set(new RoomMemberChangeEvent(RoomNumberChangeEventType.USER_LEAVE, userId));
         userStatuses.remove(userId);
     }
 

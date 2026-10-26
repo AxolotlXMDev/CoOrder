@@ -14,6 +14,8 @@ import java.util.function.Consumer;
 
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.signals.Signal;
+import github.axolotl.coorder.entity.Room;
+import github.axolotl.coorder.entity.UserSession;
 
 public class ProductPurchaseLayout extends HorizontalLayout {
 
@@ -22,7 +24,18 @@ public class ProductPurchaseLayout extends HorizontalLayout {
     private Button minusButton;
     private IntegerField quantityField;
     private IntegerField totalQuantityField;
-    private SharedValueSignal<Integer> quantitiesInRoomSignal;
+    private final SharedValueSignal<Integer> quantitiesInRoomSignal;
+
+    public static Component forRoom(Room room, Product product) {
+        String userId = UserSession.get().getId();//用于显示自己的数量
+        String productId = product.getId();
+        return new ProductPurchaseLayout(
+                product,
+                room.getProductQuantityByUser(userId, productId),
+                room.getTotalQuantitySignal(productId),
+                quantity -> room.updateQuantity(userId, productId, quantity)
+        );
+    }
 
     public ProductPurchaseLayout(Product product,
                                  int initQuantity,

@@ -10,8 +10,10 @@ import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.popover.Popover;
 import com.vaadin.flow.signals.Signal;
 import com.vaadin.flow.signals.shared.SharedNumberSignal;
+import com.vaadin.flow.signals.shared.SharedValueSignal;
 import github.axolotl.coorder.entity.Room;
 import github.axolotl.coorder.entity.UserSession;
+import github.axolotl.coorder.entity.event.RoomMemberChangeEvent;
 import github.axolotl.coorder.service.RoomService;
 import github.axolotl.coorder.service.UserSessionService;
 import org.jspecify.annotations.NonNull;
@@ -34,9 +36,10 @@ public class RoomMemberPopover extends Popover {
         addOpenedChangeListener(e -> reloadContent());
 
         SharedNumberSignal priceSignal = room.getRoomPriceSignal();
+        SharedValueSignal<RoomMemberChangeEvent> roomMemberEventSignal = room.getRoomMemberEventSignal();
         Signal.effect(this, () -> {
-            priceSignal.get();//金额有变化，更新一下这个页面
-            //TODO 房间人数有变化时更新
+            priceSignal.get();//金额有变化
+            roomMemberEventSignal.get();//房间人数有变化
             reloadContent();
         });
     }
